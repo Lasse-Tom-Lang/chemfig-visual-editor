@@ -72,6 +72,25 @@ body {
   background-color: #eee;
 }
 
+.valenceElectronsContainer {
+  margin-left: .5rem;
+  width: calc(100% - 1rem);
+  display: grid;
+  gap: .5rem;
+  grid-template-columns: repeat(4, calc((100% - 1.5rem)/4));
+}
+
+.valenceElectronsInput {
+  width: calc(100% - 1rem);
+  padding: .5rem;
+  border-radius: .5rem;
+  font-size: 15px;
+  display: block;
+  border: 0;
+  outline: 0;
+  background-color: #eee;
+}
+
 #autoDrawLabel {
   width: calc(100% - 2rem);
   margin: .5rem;
@@ -146,4 +165,16 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: .5rem;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
