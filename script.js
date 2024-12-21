@@ -1,6 +1,10 @@
 const canvas = document.getElementById("canvas");
 const sidebar = document.getElementById("sidebar");
 const autodrawCheckbox = document.getElementById("autodraw");
+const settingsDiv = document.getElementById("settings");
+const settingsHide = document.getElementById("settingsHide");
+const copyClipboard = document.getElementById("copyClipboard");
+const output = document.getElementById("output");
 
 const width = window.innerWidth - 300;
 const height = window.innerHeight;
@@ -194,9 +198,10 @@ function generateCode() {
   codeChildren(rootNode.children);
 
   outputString += "}";
-  console.log(outputString)
-  navigator.clipboard.writeText(outputString);
-  // alert("Copied to clipboard: " + outputString);
+  if (copyClipboard.checked) {
+    navigator.clipboard.writeText(outputString);
+  }
+  output.value = outputString;
 }
 
 function codeChildren(children) {
@@ -451,6 +456,19 @@ class chemNode {
     this.valenceElectrons = valenceElectrons;
   }
 }
+
+function openSettings() {
+  settingsDiv.style.display = "flex"
+  settingsHide.style.display = "block"
+}
+
+settingsHide.addEventListener("click", () => {
+  settingsDiv.style.display = "none"
+  settingsHide.style.display = "none"
+})
+
+output.addEventListener("focus", () => output.select());
+output.addEventListener("click", () => output.select());
 
 let rootNode = new chemNode(0, "C", "", 0, [], [,,,])
 
