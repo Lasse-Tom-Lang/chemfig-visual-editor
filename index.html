@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>chemfig Editor</title>
     <link rel="stylesheet" href="./style.css">
+    <script src="./language.js"></script>
     <script src="./script.js" defer></script>
   </head>
   <body>
     <canvas id="canvas"></canvas>
     <div id="sidebar">
-      <button onclick="create()" id="drawButton">Draw and Generate Code</button>
-      <input id="output" placeholder="Output"></input>
-      <button id="settingsButton" onclick="openSettings()">Settings</button>
+      <button onclick="create()" id="drawButton"></button>
+      <input id="output" placeholder=""></input>
+      <button id="settingsButton" onclick="openSettings()"></button>
       <div class="node">
-        <input type="text" placeholder="Type" value="C">
+        <input type="text" placeholder="" value="C" class="typeInput">
         <div class="valenceElectronsContainer">
           <input type="number" class="valenceElectronsInput" oninput="updateValenceElectron(event)" index="0">
           <input type="number" class="valenceElectronsInput" oninput="updateValenceElectron(event)" index="1">
@@ -26,27 +27,32 @@
     <div id="settings">
       <h1>Settings</h1>
       <label class="settingsLabel">
-        Autodraw
+        <label>
+        </label>
         <label class="switch">
           <input type="checkbox" value="Autodraw" id="autodraw" checked>
           <span class="slider round"></span>
         </label>
       </label>
       <label class="settingsLabel">
-        Copy to clipboard
+        <label>
+        </label>
         <label class="switch">
           <input type="checkbox" value="Autodraw" id="copyClipboard" checked>
           <span class="slider round"></span>
         </label>
       </label>
       <label class="settingsLabel">
-        Language
-        <select id="language">
-          <option value="english">English</option>
+        <label>
+        </label>
+        <select id="language" onchange="updateLanguage()">
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
         </select>
       </label>
     </div>
     <div id="settingsHide"></div>
     <a href="https://github.com/Lasse-Tom-Lang" id="copywrite">&copy; Lasse Lang</a>
+    <div id="rightClickMenu"></div>
   </body>
 </html>

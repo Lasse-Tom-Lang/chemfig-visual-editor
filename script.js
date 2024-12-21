@@ -5,6 +5,43 @@ const settingsDiv = document.getElementById("settings");
 const settingsHide = document.getElementById("settingsHide");
 const copyClipboard = document.getElementById("copyClipboard");
 const output = document.getElementById("output");
+const rightClickMenu = document.getElementById("rightClickMenu");
+const html = document.querySelector("html");
+const drawButton = document.getElementById("drawButton");
+const settingsButton = document.getElementById("settingsButton");
+const settingsLabels = document.querySelectorAll(".settingsLabel");
+const languageChanger = document.getElementById("language");
+
+var language = localStorage.getItem("language");
+if (language == null) {
+  language = "en"
+}
+languageChanger.value = language;
+
+function updateLanguage() {
+  language = languageChanger.value;
+  localStorage.setItem("language", language);
+  setLanguage();
+}
+
+function setLanguage() {
+  drawButton.innerText = languages[language][0];
+  output.placeholder = languages[language][1];
+  settingsButton.innerText = languages[language][2];
+  document.querySelectorAll(".typeInput").forEach(node => node.placeholder = languages[language][3]);
+  document.querySelectorAll(".bondTypeInput").forEach((node) => {
+    node.childNodes[0].innerText = languages[language][4];
+    node.childNodes[1].innerText = languages[language][5];
+    node.childNodes[2].innerText = languages[language][6];
+  });
+  document.querySelectorAll(".angleInput").forEach(node => node.placeholder = languages[language][7]);
+  document.querySelectorAll(".addButton").forEach(node => node.innerText = languages[language][8]);
+  settingsLabels[0].firstElementChild.innerText = languages[language][9];
+  settingsLabels[1].firstElementChild.innerText = languages[language][10];
+  settingsLabels[2].firstElementChild.innerText = languages[language][11];
+  settings.firstElementChild.innerText = languages[language][2];
+}
+
 
 const width = window.innerWidth - 300;
 const height = window.innerHeight;
@@ -102,7 +139,7 @@ function removeChildren(children) {
 
 function addAddButton(parent) {
   let button = document.createElement("button");
-  button.innerText = "Add";
+  button.innerText = languages[language][8];
   button.classList.add("addButton");
   button.onclick = addNode;
   parent.appendChild(button);
@@ -110,8 +147,8 @@ function addAddButton(parent) {
 
 function addRemoveButton(parent) {
   let button = document.createElement("button");
-  button.innerText = "Remove";
-  button.classList.add("addButton");
+  button.innerText = "X";
+  button.classList.add("removeButton");
   button.onclick = removeNode;
   parent.appendChild(button);
 }
@@ -119,8 +156,9 @@ function addRemoveButton(parent) {
 function addTypeInput(parent) {
   let typeInput = document.createElement("input");
   typeInput.type = "text";
-  typeInput.placeholder = "Type";
+  typeInput.placeholder = languages[language][3];
   typeInput.value = "C";
+  typeInput.classList.add("typeInput");
   typeInput.oninput = updateType;
   parent.appendChild(typeInput);
 }
@@ -128,26 +166,28 @@ function addTypeInput(parent) {
 function addAngleInput(parent) {
   let angleInput = document.createElement("input");
   angleInput.type = "number";
-  angleInput.placeholder = "Angle";
+  angleInput.placeholder = languages[language][7];
   angleInput.value = 0;
   angleInput.oninput = updateAngle;
+  angleInput.classList.add("angleInput")
   parent.appendChild(angleInput);
 }
 
 function addBondTypeSelect(parent) {
   let select = document.createElement("select");
   option = document.createElement("option");
+  select.classList.add("bondTypeInput");
   option.selected = true;
   option.value = "Single";
-  option.innerText = "Single";
+  option.innerText = languages[language][4];
   select.appendChild(option);
   option = document.createElement("option");
   option.value = "Double";
-  option.innerText = "Double";
+  option.innerText = languages[language][5];
   select.appendChild(option);
   option = document.createElement("option");
   option.value = "Trible";
-  option.innerText = "Trible";
+  option.innerText = languages[language][6];
   select.appendChild(option);
   select.oninput = updateBond;
   parent.appendChild(select);
@@ -458,18 +498,41 @@ class chemNode {
 }
 
 function openSettings() {
-  settingsDiv.style.display = "flex"
-  settingsHide.style.display = "block"
+  settingsDiv.style.display = "flex";
+  settingsHide.style.display = "block";
+  rightClickMenu.style.display = "none";
 }
 
 settingsHide.addEventListener("click", () => {
-  settingsDiv.style.display = "none"
-  settingsHide.style.display = "none"
+  settingsDiv.style.display = "none";
+  settingsHide.style.display = "none";
+  rightClickMenu.style.display = "none";
 })
 
 output.addEventListener("focus", () => output.select());
 output.addEventListener("click", () => output.select());
 
+document.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  settingsHide.style.display = "block"
+  rightClickMenu.style.display = "flex";
+  if ((window.innerWidth - event.clientX) < 120) {
+    rightClickMenu.style.left = (event.clientX-120) + "px";
+  }
+  else {
+    rightClickMenu.style.left = event.clientX + "px";
+  }
+  if ((window.innerHeight - event.clientY) < 200) {
+    rightClickMenu.style.top = (event.clientY-200) + "px";
+  }
+  else {
+    rightClickMenu.style.top = event.clientY + "px";
+  }
+  console.log(event.target)
+})
+
 let rootNode = new chemNode(0, "C", "", 0, [], [,,,])
 
 nodes = {"0": rootNode}
+
+setLanguage();
