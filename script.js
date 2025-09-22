@@ -11,6 +11,7 @@ const drawButton = document.getElementById("drawButton");
 const settingsButton = document.getElementById("settingsButton");
 const settingsLabels = document.querySelectorAll(".settingsLabel");
 const languageChanger = document.getElementById("language");
+const captionInput = document.querySelector(".captionInput");
 
 var language = localStorage.getItem("language");
 if (language == null) {
@@ -29,6 +30,7 @@ function setLanguage() {
   output.placeholder = languages[language][1];
   settingsButton.innerText = languages[language][2];
   document.querySelectorAll(".typeInput").forEach(node => node.placeholder = languages[language][3]);
+  captionInput.placeholder = languages[language][12];
   document.querySelectorAll(".bondTypeInput").forEach((node) => {
     node.childNodes[0].innerText = languages[language][4];
     node.childNodes[1].innerText = languages[language][5];
@@ -69,17 +71,6 @@ ctx.lineWidth = 2;
 
 ctx.fillText("C", width/2, height/2);
 
-// ctx.beginPath();
-// ctx.moveTo(width/2+20, height/2-8);
-// ctx.lineTo(width/2+30, height/2-8);
-// ctx.closePath();
-// ctx.stroke();
-
-// ctx.beginPath();
-// ctx.moveTo(width/2-5, height/2-8);
-// ctx.lineTo(width/2-15, height/2-8);
-// ctx.closePath();
-// ctx.stroke();
 
 let firstNode = document.getElementsByClassName("node")[0];
 firstNode.setAttribute("nodeID", "0");
@@ -138,38 +129,54 @@ function removeChildren(children) {
 }
 
 function addAddButton(parent) {
-  let button = document.createElement("button");
-  button.innerText = languages[language][8];
-  button.classList.add("addButton");
-  button.onclick = addNode;
+  var button = Object.assign(
+    document.createElement("button"), 
+    {
+      innerText: languages[language][8],
+      classList: "addButton",
+      onclick: addNode
+    }
+  )
   parent.appendChild(button);
 }
 
 function addRemoveButton(parent) {
-  let button = document.createElement("button");
-  button.innerText = "X";
-  button.classList.add("removeButton");
-  button.onclick = removeNode;
+  var button = Object.assign(
+    document.createElement("button"), 
+    {
+      innerText: "X",
+      classList: "removeButton",
+      onclick: removeNode
+    }
+  )
   parent.appendChild(button);
 }
 
 function addTypeInput(parent) {
-  let typeInput = document.createElement("input");
-  typeInput.type = "text";
-  typeInput.placeholder = languages[language][3];
-  typeInput.value = "C";
-  typeInput.classList.add("typeInput");
-  typeInput.oninput = updateType;
+  var typeInput = Object.assign(
+    document.createElement("input"), 
+    {
+      type: "text",
+      placeholder: languages[language][3],
+      value: "C",
+      classList: "typeInput",
+      oninput: updateType
+    }
+  )
   parent.appendChild(typeInput);
 }
 
 function addAngleInput(parent) {
-  let angleInput = document.createElement("input");
-  angleInput.type = "number";
-  angleInput.placeholder = languages[language][7];
-  angleInput.value = 0;
-  angleInput.oninput = updateAngle;
-  angleInput.classList.add("angleInput")
+  var angleInput = Object.assign(
+    document.createElement("input"), 
+    {
+      type: "number",
+      placeholder: languages[language][7],
+      value: 0,
+      classList: "angleInput",
+      oninput: updateAngle
+    }
+  )
   parent.appendChild(angleInput);
 }
 
@@ -213,7 +220,11 @@ function create() {
 }
 
 function generateCode() {
-  outputString = "\\chemfig{";
+  outputString = ""
+  if (rootNode.caption != "" && rootNode.caption) {
+    outputString += "\\chemname{";
+  }
+  outputString += "\\chemfig{";
   
   a = true;
   rootNode.valenceElectrons.forEach(valenceElectron => {
@@ -236,6 +247,10 @@ function generateCode() {
   }
 
   codeChildren(rootNode.children);
+
+  if (rootNode.caption != "" && rootNode.caption) {
+    outputString += `}{${rootNode.caption}}`;
+  }
 
   outputString += "}";
   if (copyClipboard.checked) {
@@ -292,6 +307,7 @@ function codeChildren(children) {
 function draw() {
   let xPosition = width/2;
   let yPosition = height/2;
+  let boundingBox = [xPosition, yPosition, xPosition, yPosition]
   ctx.clearRect(0, 0, width, height);
   ctx.fillText(rootNode.type, xPosition, yPosition);
 
@@ -313,14 +329,34 @@ function draw() {
     }
   })
 
-  drawRecursive(rootNode.children, rootNode.type, xPosition, yPosition);
+  drawRecursive(rootNode.children, rootNode.type, xPosition, yPosition, boundingBox);
+  boundingBoxPadding = 30
+  boundingBoxCorrection = [10, 10]
+  boundingBox[0] -= boundingBoxPadding - boundingBoxCorrection[0]
+  boundingBox[1] -= boundingBoxPadding + boundingBoxCorrection[1]
+  boundingBox[2] += boundingBoxPadding + boundingBoxCorrection[0]
+  boundingBox[3] += boundingBoxPadding - boundingBoxCorrection[1]
+  // ctx.beginPath();
+  // ctx.moveTo(boundingBox[0], boundingBox[1]);
+  // ctx.lineTo(boundingBox[2], boundingBox[1]);
+  // ctx.lineTo(boundingBox[2], boundingBox[3]);
+  // ctx.lineTo(boundingBox[0], boundingBox[3]);
+  // ctx.closePath();
+  // ctx.stroke();
+  if (rootNode.caption) {
+    ctx.fillText(rootNode.caption, boundingBox[0], boundingBox[3]);
+  }
 }
 
-function drawRecursive(nodes, oldNodeType, xPosition, yPosition) {
+function drawRecursive(nodes, oldNodeType, xPosition, yPosition, boundingBox) {
   nodes.forEach(node => {
     newY = Math.round(-Math.sin(node.angle * (Math.PI / 180))*distance, 1);
     newX = Math.round(Math.cos(node.angle * (Math.PI / 180))*distance, 1);
     ctx.fillText(node.type, xPosition+newX, yPosition+newY);
+    boundingBox[0] = Math.min(boundingBox[0], xPosition+newX);
+    boundingBox[2] = Math.max(boundingBox[2], xPosition+newX);
+    boundingBox[1] = Math.min(boundingBox[1], yPosition+newY);
+    boundingBox[3] = Math.max(boundingBox[3], yPosition+newY);
 
     node.valenceElectrons.forEach(valenceElectron => {
       if (valenceElectron != "") {
@@ -454,7 +490,7 @@ function drawRecursive(nodes, oldNodeType, xPosition, yPosition) {
 
     }
 
-    drawRecursive(node.children, node.type, xPosition+newX, yPosition+newY);
+    drawRecursive(node.children, node.type, xPosition+newX, yPosition+newY, boundingBox);
   })
 }
 
@@ -464,6 +500,15 @@ function updateType(event) {
     draw()
   }
 }
+
+function updateCaption(event) {
+  rootNode.caption = event.target.value;
+  if (autoDraw) {
+    draw()
+  }
+}
+
+captionInput.addEventListener("input", updateCaption);
 
 function updateBond(event) {
   nodes[event.target.parentNode.getAttribute("nodeID")].bond = event.target.value;

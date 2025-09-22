@@ -11,7 +11,8 @@ var languages = {
     "Add",
     "Autodraw",
     "Copy to clipboard",
-    "Language"
+    "Language",
+    "Caption"
   ],
   "de": [
     "Zeichnen und Code generieren",
@@ -25,6 +26,7 @@ var languages = {
     "Hinzufügen",
     "Automatisches Zeichnen",
     "Zur Zwischenablage hinzufügen",
-    "Sprache"
+    "Sprache",
+    "Beschriftung"
   ]
 }
