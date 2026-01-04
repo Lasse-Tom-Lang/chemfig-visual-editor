@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>chemfig Editor</title>
+    <title>chemfig-Editor</title>
     <link rel="stylesheet" href="./style.css">
     <script src="./language.js"></script>
     <script src="./script.js" defer></script>
@@ -12,11 +12,11 @@
     <canvas id="canvas"></canvas>
     <div id="sidebar">
       <button onclick="create()" id="drawButton"></button>
-      <input id="output" placeholder=""></input>
+      <input id="output"></input>
       <button id="settingsButton" onclick="openSettings()"></button>
       <div class="node">
-        <input type="text" placeholder="" value="C" class="typeInput">
-        <input type="text" placeholder="" value="" class="captionInput">
+        <input type="text" value="C" class="typeInput">
+        <input type="text" value="" class="captionInput">
         <div class="valenceElectronsContainer">
           <input type="number" class="valenceElectronsInput" oninput="updateValenceElectron(event)" index="0">
           <input type="number" class="valenceElectronsInput" oninput="updateValenceElectron(event)" index="1">
@@ -54,6 +54,5 @@
     </div>
     <div id="settingsHide"></div>
     <a href="https://github.com/Lasse-Tom-Lang" id="copywrite">&copy; Lasse Lang</a>
-    <div id="rightClickMenu"></div>
   </body>
 </html>

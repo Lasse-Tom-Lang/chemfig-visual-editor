@@ -234,17 +234,6 @@ input[type=number] {
   color: black;
 }
 
-#rightClickMenu {
-  position: fixed;
-  background-color: white;
-  box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
-  z-index: 110;
-  width: 120px;
-  height: 200px;
-  display: none;
-  border-radius: 1rem;
-}
-
 .removeButton {
   display: none;
   position: absolute;

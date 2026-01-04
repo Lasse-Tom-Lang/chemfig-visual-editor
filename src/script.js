@@ -5,7 +5,6 @@ const settingsDiv = document.getElementById("settings");
 const settingsHide = document.getElementById("settingsHide");
 const copyClipboard = document.getElementById("copyClipboard");
 const output = document.getElementById("output");
-const rightClickMenu = document.getElementById("rightClickMenu");
 const html = document.querySelector("html");
 const drawButton = document.getElementById("drawButton");
 const settingsButton = document.getElementById("settingsButton");
@@ -13,11 +12,61 @@ const settingsLabels = document.querySelectorAll(".settingsLabel");
 const languageChanger = document.getElementById("language");
 const captionInput = document.querySelector(".captionInput");
 
+// Setting up selected language
 var language = localStorage.getItem("language");
 if (language == null) {
-  language = "en"
+  language = "en";
 }
 languageChanger.value = language;
+
+// Setting up canvas
+const width = window.innerWidth - 300;
+const height = window.innerHeight;
+const dpi = window.devicePixelRatio;
+const ctx = canvas.getContext("2d");
+canvas.width = width*2;
+canvas.height = height*2;
+canvas.style.width = width+"px";
+canvas.style.height = height+"px";
+ctx.scale(dpi, dpi);
+ctx.font = "20px sans-serif";
+ctx.lineWidth = 2;
+
+// Setting constants for drawing
+const distance = 50; // Distance between nodes on the canvas
+const xLineOffset = 8; // X-Offset for connection line
+const yLineOffset = -7; // Y-Offset for connection line
+const offset = 4; // Offset for double or trible connection lines
+
+let autoDraw = true; // If canvas should refresh after each change
+
+let outputString = ""; // The finished chemfig output
+let nodeIDs = 1; // Increments for each new node created
+
+ctx.fillText("C", width/2, height/2);
+
+
+let firstNode = document.getElementsByClassName("node")[0];
+firstNode.setAttribute("nodeID", "0");
+firstNode.firstElementChild.oninput = updateType;
+addAddButton(firstNode);
+
+setLanguage();
+
+class chemNode {
+  constructor(id, type, bond, angle, children, valenceElectrons) {
+    this.id = id;
+    this.type = type;
+    this.bond = bond;
+    this.angle = angle;
+    this.children = children;
+    this.valenceElectrons = valenceElectrons;
+  }
+}
+
+let rootNode = new chemNode(0, "C", "", 0, [], [,,,])
+
+let nodes = {"0": rootNode}
 
 function updateLanguage() {
   language = languageChanger.value;
@@ -25,7 +74,8 @@ function updateLanguage() {
   setLanguage();
 }
 
-function setLanguage() {
+function setLanguage() { 
+  // This function sets all text in HTML Elements to the currently selected language
   drawButton.innerText = languages[language][0];
   output.placeholder = languages[language][1];
   settingsButton.innerText = languages[language][2];
@@ -44,47 +94,13 @@ function setLanguage() {
   settings.firstElementChild.innerText = languages[language][2];
 }
 
-
-const width = window.innerWidth - 300;
-const height = window.innerHeight;
-
-canvas.width = width*2;
-canvas.height = height*2;
-canvas.style.width = width+"px";
-canvas.style.height = height+"px";
-const dpi = window.devicePixelRatio;
-
-let outputString = ""
-
-const distance = 50;
-const xLineOffset = 8;
-const yLineOffset = -7;
-const offset = 4;
-
-let autoDraw = true;
-
-const ctx = canvas.getContext("2d");
-ctx.scale(dpi, dpi);
-
-ctx.font = "20px sans-serif";
-ctx.lineWidth = 2;
-
-ctx.fillText("C", width/2, height/2);
-
-
-let firstNode = document.getElementsByClassName("node")[0];
-firstNode.setAttribute("nodeID", "0");
-firstNode.firstElementChild.oninput = updateType;
-addAddButton(firstNode);
-nodeIDs = 1
-
-autodrawCheckbox.addEventListener("change", () => {
-  autoDraw = autodrawCheckbox.checked;
-})
-
 function addNode(event) {
-  let node = document.createElement("div");
-  node.classList.add("node");
+  let node = Object.assign(
+    document.createElement("div"), 
+    {
+      classList: "node"
+    }
+  )
   addTypeInput(node);
   addBondTypeSelect(node);
   addAngleInput(node);
@@ -103,7 +119,7 @@ function addNode(event) {
 }
 
 function removeNode(event) {
-  id = event.target.parentNode.getAttribute("nodeID");
+  let id = event.target.parentNode.getAttribute("nodeID");
   parentID = event.target.parentNode.parentNode.getAttribute("nodeID");
   event.target.parentNode.remove()
   removeChildren(nodes[id].children)
@@ -129,7 +145,7 @@ function removeChildren(children) {
 }
 
 function addAddButton(parent) {
-  var button = Object.assign(
+  let button = Object.assign(
     document.createElement("button"), 
     {
       innerText: languages[language][8],
@@ -141,7 +157,7 @@ function addAddButton(parent) {
 }
 
 function addRemoveButton(parent) {
-  var button = Object.assign(
+  let button = Object.assign(
     document.createElement("button"), 
     {
       innerText: "X",
@@ -153,7 +169,7 @@ function addRemoveButton(parent) {
 }
 
 function addTypeInput(parent) {
-  var typeInput = Object.assign(
+  let typeInput = Object.assign(
     document.createElement("input"), 
     {
       type: "text",
@@ -167,7 +183,7 @@ function addTypeInput(parent) {
 }
 
 function addAngleInput(parent) {
-  var angleInput = Object.assign(
+  let angleInput = Object.assign(
     document.createElement("input"), 
     {
       type: "number",
@@ -220,26 +236,29 @@ function create() {
 }
 
 function generateCode() {
-  outputString = ""
-  if (rootNode.caption != "" && rootNode.caption) {
+  outputString = "";
+
+  if (rootNode.caption != "" && rootNode.caption) { // If fig has a name
     outputString += "\\chemname{";
   }
+
   outputString += "\\chemfig{";
   
-  a = true;
+  firstElectronCharge = true;
   rootNode.valenceElectrons.forEach(valenceElectron => {
-    if (valenceElectron != "" && valenceElectron != undefined) {
-      if (a) {
-        outputString += "\\charge{"
-        a = false
-      }
-      else {
-        outputString += ","
-      }
-      outputString += `${valenceElectron}=\\|`;
+    if (valenceElectron == "" || valenceElectron == undefined) { // If charge is not defined
+      return;
     }
+    if (firstElectronCharge) {
+      outputString += "\\charge{"
+      firstElectronCharge = false
+    }
+    else {
+      outputString += ","
+    }
+    outputString += `${valenceElectron}=\\|`;
   })
-  if (a) {
+  if (firstElectronCharge) {
     outputString += rootNode.type;
   }
   else {
@@ -278,21 +297,22 @@ function codeChildren(children) {
     if (child.angle != 0) {
       outputString += `[:${child.angle}]`
     }
-    a = true;
-    child.valenceElectrons.forEach(valenceElectron => {
-      if (valenceElectron != "" && valenceElectron != undefined) {
-        if (a) {
-          outputString += "\\charge{"
-          a = false
-        }
-        else {
-          outputString += ","
-        }
-        outputString += `${valenceElectron}=\\|`;
+    firstElectronCharge = true;
+    rootNode.valenceElectrons.forEach(valenceElectron => {
+      if (valenceElectron == "" || valenceElectron == undefined) { // If charge is not defined
+        return;
       }
+      if (firstElectronCharge) {
+        outputString += "\\charge{"
+        firstElectronCharge = false
+      }
+      else {
+        outputString += ","
+      }
+      outputString += `${valenceElectron}=\\|`;
     })
-    if (a) {
-      outputString += child.type;
+    if (firstElectronCharge) {
+      outputString += rootNode.type;
     }
     else {
       outputString += `}{${child.type}}`;
@@ -378,41 +398,25 @@ function drawRecursive(nodes, oldNodeType, xPosition, yPosition, boundingBox) {
 
     if (node.bond == "Single") {
       ctx.beginPath();
-      if (node.type != "" && oldNodeType != "") {
+      if (oldNodeType != "") {
         ctx.moveTo(
           xPosition+xLineOffset + Math.round(Math.cos(node.angle * (Math.PI / 180))*(xLineOffset+4), 1),
           yPosition+yLineOffset - Math.round(-Math.sin(node.angle * (Math.PI / 180))*(yLineOffset-4), 1)
         );
+      }
+      else {
+        ctx.moveTo(
+          xPosition+xLineOffset, 
+          yPosition+yLineOffset
+        );
+      }
+      if (node.type != "") {
         ctx.lineTo(
           xPosition+newX+xLineOffset - Math.round(Math.cos(node.angle * (Math.PI / 180))*(xLineOffset+4), 1),
           yPosition+newY+yLineOffset + Math.round(-Math.sin(node.angle * (Math.PI / 180))*(yLineOffset-4), 1)
         );
       }
-      else if (node.type == "" && oldNodeType != "") {
-        ctx.moveTo(
-          xPosition+xLineOffset + Math.round(Math.cos(node.angle * (Math.PI / 180))*(xLineOffset+4), 1), 
-          yPosition+yLineOffset - Math.round(-Math.sin(node.angle * (Math.PI / 180))*(yLineOffset-4), 1)
-        );
-        ctx.lineTo(
-          xPosition+newX+xLineOffset, 
-          yPosition+newY+yLineOffset
-        );
-      }
-      else if (node.type != "" && oldNodeType == "") {
-        ctx.moveTo(
-          xPosition+xLineOffset, 
-          yPosition+yLineOffset
-        );
-        ctx.lineTo(
-          xPosition+newX+xLineOffset - Math.round(Math.cos(node.angle * (Math.PI / 180))*(xLineOffset+4), 1),
-          yPosition+newY+yLineOffset + Math.round(-Math.sin(node.angle * (Math.PI / 180))*(yLineOffset-4), 1)
-        );
-      }
-      else if (node.type == "" && oldNodeType == "") {
-        ctx.moveTo(
-          xPosition+xLineOffset, 
-          yPosition+yLineOffset
-        );
+      else {
         ctx.lineTo(
           xPosition+newX+xLineOffset, 
           yPosition+newY+yLineOffset
@@ -531,53 +535,19 @@ function updateValenceElectron(event) {
   }
 }
 
-class chemNode {
-  constructor(id, type, bond, angle, children, valenceElectrons) {
-    this.id = id;
-    this.type = type;
-    this.bond = bond;
-    this.angle = angle;
-    this.children = children;
-    this.valenceElectrons = valenceElectrons;
-  }
-}
-
 function openSettings() {
   settingsDiv.style.display = "flex";
   settingsHide.style.display = "block";
-  rightClickMenu.style.display = "none";
 }
 
 settingsHide.addEventListener("click", () => {
   settingsDiv.style.display = "none";
   settingsHide.style.display = "none";
-  rightClickMenu.style.display = "none";
 })
 
 output.addEventListener("focus", () => output.select());
 output.addEventListener("click", () => output.select());
 
-document.addEventListener("contextmenu", (event) => {
-  event.preventDefault();
-  settingsHide.style.display = "block"
-  rightClickMenu.style.display = "flex";
-  if ((window.innerWidth - event.clientX) < 120) {
-    rightClickMenu.style.left = (event.clientX-120) + "px";
-  }
-  else {
-    rightClickMenu.style.left = event.clientX + "px";
-  }
-  if ((window.innerHeight - event.clientY) < 200) {
-    rightClickMenu.style.top = (event.clientY-200) + "px";
-  }
-  else {
-    rightClickMenu.style.top = event.clientY + "px";
-  }
-  console.log(event.target)
+autodrawCheckbox.addEventListener("change", () => {
+  autoDraw = autodrawCheckbox.checked;
 })
-
-let rootNode = new chemNode(0, "C", "", 0, [], [,,,])
-
-nodes = {"0": rootNode}
-
-setLanguage();
