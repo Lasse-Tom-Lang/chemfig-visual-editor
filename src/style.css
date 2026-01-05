@@ -28,7 +28,7 @@ select {
 .addButton,
 #drawButton,
 #settingsButton,
-#output {
+#outputTextField {
   width: calc(100% - 1rem);
   margin: .5rem;
   padding: .5rem;
@@ -42,11 +42,11 @@ select {
 
 #drawButton,
 #settingsButton,
-#output {
+#outputTextField {
   background-color: white !important;
 }
 
-#output {
+#outputTextField {
   width: calc(100% - 2rem);
   cursor: default;
   outline: 0;
