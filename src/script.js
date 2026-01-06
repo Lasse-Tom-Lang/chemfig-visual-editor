@@ -43,10 +43,10 @@ ctx.lineWidth = 2;
 
 // Setting constants for drawing
 const distance = 50; // Distance between nodes on the canvas
-const LineOffset = new Vector2(8, -7); // ffset for connection line
+const LineOffset = new Vector2(8, -7); // Offsets center to center of node
 const offsetForDoubleTriple = 4; // Offset for double or trible connection lines
 const boundingBoxPadding = 50;
-const boundingBoxCorrection = [10, 10];
+const boundingBoxCorrection = new Vector2(10, 10);
 
 let autoDraw = true; // If canvas should refresh after each change
 
@@ -341,14 +341,12 @@ function codeChildren(childrenIDs) {
 function draw() {
   ctx.clearRect(0, 0, width, height); // Clears canvas
 
-  // Sets starting location (center of canvas)
-  let xPosition = width/2;
-  let yPosition = height/2;
+  let currentNodePosition = new Vector2(width/2, height/2) // Sets starting location (center of canvas)
 
   // Initalizes bounding box
-  let boundingBox = [xPosition, yPosition, xPosition, yPosition];
+  let boundingBox = [currentNodePosition.x, currentNodePosition.y, currentNodePosition.x, currentNodePosition.y];
 
-  ctx.fillText(rootNode.type, xPosition, yPosition);
+  ctx.fillText(rootNode.type, currentNodePosition.x, currentNodePosition.y);
 
   rootNode.valenceElectrons.forEach(valenceElectron => {
     if (valenceElectron != "") {
@@ -356,23 +354,23 @@ function draw() {
       degree2 = (parseInt(valenceElectron)+40);
       ctx.beginPath();
       ctx.moveTo(
-        xPosition+LineOffset.x + Math.round(Math.cos(degree * (Math.PI / 180))*(LineOffset.x+6), 1),
-        yPosition+LineOffset.y - Math.round(-Math.sin(degree * (Math.PI / 180))*(LineOffset.y-6), 1)
+        currentNodePosition.x+LineOffset.x + Math.round(Math.cos(degree * (Math.PI / 180))*(LineOffset.x+6), 1),
+        currentNodePosition.y+LineOffset.y - Math.round(-Math.sin(degree * (Math.PI / 180))*(LineOffset.y-6), 1)
       );
       ctx.lineTo(
-        xPosition+LineOffset.x + Math.round(Math.cos(degree2 * (Math.PI / 180))*(LineOffset.x+6), 1),
-        yPosition+LineOffset.y - Math.round(-Math.sin(degree2 * (Math.PI / 180))*(LineOffset.y-6), 1)
+        currentNodePosition.x+LineOffset.x + Math.round(Math.cos(degree2 * (Math.PI / 180))*(LineOffset.x+6), 1),
+        currentNodePosition.y+LineOffset.y - Math.round(-Math.sin(degree2 * (Math.PI / 180))*(LineOffset.y-6), 1)
       );
       ctx.closePath();
       ctx.stroke();
     }
   })
 
-  drawRecursive(rootNode.childrenIDs, rootNode.type, xPosition, yPosition, boundingBox);
-  boundingBox[0] -= boundingBoxPadding - boundingBoxCorrection[0];
-  boundingBox[1] -= boundingBoxPadding + boundingBoxCorrection[1];
-  boundingBox[2] += boundingBoxPadding + boundingBoxCorrection[0];
-  boundingBox[3] += boundingBoxPadding - boundingBoxCorrection[1];
+  drawRecursive(rootNode.childrenIDs, rootNode.type, currentNodePosition, boundingBox);
+  boundingBox[0] -= boundingBoxPadding - boundingBoxCorrection.x;
+  boundingBox[1] -= boundingBoxPadding + boundingBoxCorrection.y;
+  boundingBox[2] += boundingBoxPadding + boundingBoxCorrection.x;
+  boundingBox[3] += boundingBoxPadding - boundingBoxCorrection.y;
   // ctx.beginPath();
   // ctx.moveTo(boundingBox[0], boundingBox[1]);
   // ctx.lineTo(boundingBox[2], boundingBox[1]);
@@ -385,15 +383,20 @@ function draw() {
   }
 }
 
-function drawRecursive(childrenIDs, oldNodeType, xPosition, yPosition, boundingBox) {
+function drawRecursive(childrenIDs, oldNodeType, currentNodePosition, boundingBox) {
   childrenIDs.forEach(childID => {
-    newY = Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*distance, 1);
-    newX = Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*distance, 1);
-    ctx.fillText(nodes[childID].type, xPosition+newX, yPosition+newY);
-    boundingBox[0] = Math.min(boundingBox[0], xPosition+newX);
-    boundingBox[2] = Math.max(boundingBox[2], xPosition+newX);
-    boundingBox[1] = Math.min(boundingBox[1], yPosition+newY);
-    boundingBox[3] = Math.max(boundingBox[3], yPosition+newY);
+    newNodePosition = new Vector2(
+      Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*distance, 1),
+      Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*distance, 1)
+    )
+    ctx.fillText(nodes[childID].type, currentNodePosition.x+newNodePosition.x, currentNodePosition.y+newNodePosition.y);
+    // ctx.beginPath();
+    // ctx.arc(currentNodePosition.x + newNodePosition.x + LineOffset.x, currentNodePosition.y + newNodePosition.y + LineOffset.y, 10, 0, 2 * Math.PI);
+    // ctx.stroke()
+    boundingBox[0] = Math.min(boundingBox[0], currentNodePosition.x+newNodePosition.x);
+    boundingBox[2] = Math.max(boundingBox[2], currentNodePosition.x+newNodePosition.x);
+    boundingBox[1] = Math.min(boundingBox[1], currentNodePosition.y+newNodePosition.y);
+    boundingBox[3] = Math.max(boundingBox[3], currentNodePosition.y+newNodePosition.y);
 
     nodes[childID].valenceElectrons.forEach(valenceElectron => {
       if (valenceElectron != "") {
@@ -401,12 +404,12 @@ function drawRecursive(childrenIDs, oldNodeType, xPosition, yPosition, boundingB
         degree2 = (parseInt(valenceElectron)+40);
         ctx.beginPath();
         ctx.moveTo(
-          xPosition+LineOffset.x+newX + Math.round(Math.cos(degree * (Math.PI / 180))*(LineOffset.x+6), 1),
-          yPosition+LineOffset.y+newY - Math.round(-Math.sin(degree * (Math.PI / 180))*(LineOffset.y-6), 1)
+          currentNodePosition.x+LineOffset.x+newNodePosition.x + Math.round(Math.cos(degree * (Math.PI / 180))*(LineOffset.x+6), 1),
+          currentNodePosition.y+LineOffset.y+newNodePosition.y - Math.round(-Math.sin(degree * (Math.PI / 180))*(LineOffset.y-6), 1)
         );
         ctx.lineTo(
-          xPosition+LineOffset.x+newX + Math.round(Math.cos(degree2 * (Math.PI / 180))*(LineOffset.x+6), 1),
-          yPosition+LineOffset.y+newY - Math.round(-Math.sin(degree2 * (Math.PI / 180))*(LineOffset.y-6), 1)
+          currentNodePosition.x+LineOffset.x+newNodePosition.x + Math.round(Math.cos(degree2 * (Math.PI / 180))*(LineOffset.x+6), 1),
+          currentNodePosition.y+LineOffset.y+newNodePosition.y - Math.round(-Math.sin(degree2 * (Math.PI / 180))*(LineOffset.y-6), 1)
         );
         ctx.closePath();
         ctx.stroke();
@@ -417,26 +420,26 @@ function drawRecursive(childrenIDs, oldNodeType, xPosition, yPosition, boundingB
       ctx.beginPath();
       if (oldNodeType != "") {
         ctx.moveTo(
-          xPosition+LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
-          yPosition+LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
+          currentNodePosition.x+LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
+          currentNodePosition.y+LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
         );
       }
       else {
         ctx.moveTo(
-          xPosition+LineOffset.x, 
-          yPosition+LineOffset.y
+          currentNodePosition.x+LineOffset.x, 
+          currentNodePosition.y+LineOffset.y
         );
       }
       if (nodes[childID].type != "") {
         ctx.lineTo(
-          xPosition+newX+LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
-          yPosition+newY+LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
+          currentNodePosition.x+newNodePosition.x+LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
+          currentNodePosition.y+newNodePosition.y+LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
         );
       }
       else {
         ctx.lineTo(
-          xPosition+newX+LineOffset.x, 
-          yPosition+newY+LineOffset.y
+          currentNodePosition.x+newNodePosition.x+LineOffset.x, 
+          currentNodePosition.y+newNodePosition.y+LineOffset.y
         );
       }
       ctx.closePath();
@@ -448,24 +451,24 @@ function drawRecursive(childrenIDs, oldNodeType, xPosition, yPosition, boundingB
 
       ctx.beginPath();
       ctx.moveTo(
-          xPosition + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
-          yPosition + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
+          currentNodePosition.x + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
+          currentNodePosition.y + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
       );
       ctx.lineTo(
-          xPosition + newX + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
-          yPosition + newY + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
+          currentNodePosition.x + newNodePosition.x + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
+          currentNodePosition.y + newNodePosition.y + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
       );
       ctx.closePath();
       ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(
-          xPosition + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
-          yPosition + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
+          currentNodePosition.x + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
+          currentNodePosition.y + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
       );
       ctx.lineTo(
-          xPosition + newX + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
-          yPosition + newY + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
+          currentNodePosition.x + newNodePosition.x + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
+          currentNodePosition.y + newNodePosition.y + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
       );
       ctx.closePath();
       ctx.stroke();
@@ -476,42 +479,42 @@ function drawRecursive(childrenIDs, oldNodeType, xPosition, yPosition, boundingB
 
       ctx.beginPath();
       ctx.moveTo(
-          xPosition + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
-          yPosition + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
+          currentNodePosition.x + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
+          currentNodePosition.y + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
       );
       ctx.lineTo(
-          xPosition + newX + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
-          yPosition + newY + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
+          currentNodePosition.x + newNodePosition.x + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) + perpendicularOffsetX,
+          currentNodePosition.y + newNodePosition.y + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) + perpendicularOffsetY
       );
       ctx.closePath();
       ctx.stroke();
 
       ctx.beginPath();
       ctx.moveTo(
-          xPosition + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
-          yPosition + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
+          currentNodePosition.x + LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
+          currentNodePosition.y + LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
       );
       ctx.lineTo(
-          xPosition + newX + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
-          yPosition + newY + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
+          currentNodePosition.x + newNodePosition.x + LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.x + 4), 1) - perpendicularOffsetX,
+          currentNodePosition.y + newNodePosition.y + LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180)) * (LineOffset.y - 4), 1) - perpendicularOffsetY
       );
       ctx.closePath();
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(
-        xPosition+LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
-        yPosition+LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
+        currentNodePosition.x+LineOffset.x + Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
+        currentNodePosition.y+LineOffset.y - Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4), 1)
       );
       ctx.lineTo(
-        xPosition+newX+LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
-        yPosition+newY+LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4))
+        currentNodePosition.x+newNodePosition.x+LineOffset.x - Math.round(Math.cos(nodes[childID].angle * (Math.PI / 180))*(LineOffset.x+4), 1),
+        currentNodePosition.y+newNodePosition.y+LineOffset.y + Math.round(-Math.sin(nodes[childID].angle * (Math.PI / 180))*(LineOffset.y-4))
       );
       ctx.closePath();
       ctx.stroke();
 
     }
 
-    drawRecursive(nodes[childID].childrenIDs, nodes[childID].type, xPosition+newX, yPosition+newY, boundingBox);
+    drawRecursive(nodes[childID].childrenIDs, nodes[childID].type, new Vector2(currentNodePosition.x + newNodePosition.x, currentNodePosition.y + newNodePosition.y), boundingBox);
   })
 }
 
