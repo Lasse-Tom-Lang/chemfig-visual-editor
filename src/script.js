@@ -9,6 +9,7 @@ const settingsButton = document.getElementById("settingsButton");
 const settingsLabels = document.querySelectorAll(".settingsLabel");
 const languageChanger = document.getElementById("language");
 const captionInput = document.querySelector(".captionInput");
+const newNodeTemplate = document.getElementById("newNodeTemplate");
 
 class Vector2 {
   constructor(x, y) {
@@ -107,22 +108,11 @@ function setLanguage() {
 }
 
 function addNode(event) {
-  let node = Object.assign(
-    document.createElement("div"), 
-    {
-      classList: "node"
-    }
-  );
-  addTypeInput(node);
-  addBondTypeSelect(node);
-  addAngleInput(node);
-  addValenceElectronInput(node);
-  addRemoveButton(node);
-  addAddButton(node);
-  node.setAttribute("nodeID", nodeIDs);
-  newNode = new ChemNode(nodeIDs, "C", "Single", 0, [], [,,,], node);
+  let newNodeElement = newNodeTemplate.content.cloneNode(true);
+  newNodeElement.firstElementChild.setAttribute("nodeID", nodeIDs);
+  newNode = new ChemNode(nodeIDs, "C", "Single", 0, [], [,,,], newNodeElement);
   nodes[event.target.parentNode.getAttribute("nodeID")].childrenIDs.push(newNode.id);
-  event.target.parentNode.insertBefore(node, event.target);
+  event.target.parentNode.insertBefore(newNodeElement, event.target);
   nodes[newNode.id] = newNode;
   if (autoDraw) {
     draw();
@@ -168,80 +158,6 @@ function addAddButton(parent) {
     }
   );
   parent.appendChild(button);
-}
-
-function addRemoveButton(parent) {
-  let button = Object.assign(
-    document.createElement("button"), 
-    {
-      innerText: "X",
-      classList: "removeButton",
-      onclick: removeNode
-    }
-  );
-  parent.appendChild(button);
-}
-
-function addTypeInput(parent) {
-  let typeInput = Object.assign(
-    document.createElement("input"), 
-    {
-      type: "text",
-      placeholder: languages[language][3],
-      value: "C",
-      classList: "typeInput",
-      oninput: updateType
-    }
-  );
-  parent.appendChild(typeInput);
-}
-
-function addAngleInput(parent) {
-  let angleInput = Object.assign(
-    document.createElement("input"), 
-    {
-      type: "number",
-      placeholder: languages[language][7],
-      value: 0,
-      classList: "angleInput",
-      oninput: updateAngle
-    }
-  );
-  parent.appendChild(angleInput);
-}
-
-function addBondTypeSelect(parent) {
-  let select = document.createElement("select");
-  option = document.createElement("option");
-  select.classList.add("bondTypeInput");
-  option.selected = true;
-  option.value = "Single";
-  option.innerText = languages[language][4];
-  select.appendChild(option);
-  option = document.createElement("option");
-  option.value = "Double";
-  option.innerText = languages[language][5];
-  select.appendChild(option);
-  option = document.createElement("option");
-  option.value = "Trible";
-  option.innerText = languages[language][6];
-  select.appendChild(option);
-  select.oninput = updateBond;
-  parent.appendChild(select);
-}
-
-function addValenceElectronInput(parent) {
-  let div = document.createElement("div");
-  div.classList.add("valenceElectronsContainer");
-  for (i = 0; i<4; i++) {
-    input = document.createElement("input");
-    input.type = "number";
-    input.classList.add("valenceElectronsInput");
-    input.oninput = updateValenceElectron;
-    input.setAttribute("index", i);
-    div.appendChild(input);
-  }
-  parent.appendChild(div);
 }
 
 function create() {

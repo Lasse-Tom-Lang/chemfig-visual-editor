@@ -54,5 +54,25 @@
     </div>
     <div id="settingsHide"></div>
     <a href="https://github.com/Lasse-Tom-Lang" id="copywrite">&copy; Lasse Lang</a>
+
+    <template id="newNodeTemplate">
+      <div class="node">
+        <input type="text" placeholder="Type" class="typeInput" value="C" oninput="updateType(event)">
+        <select class="bondTypeInput" oninput="updateBond(event)">
+          <option value="Single">Single</option>
+          <option value="Double">Double</option>
+          <option value="Trible">Trible</option>
+        </select>
+        <input type="number" placeholder="Angle" class="angleInput" oninput="updateAngle(event)" value="0">
+        <div class="valenceElectronsContainer">
+          <input type="number" class="valenceElectronsInput" index="0" oninput="updateValenceElectron(event)">
+          <input type="number" class="valenceElectronsInput" index="1" oninput="updateValenceElectron(event)">
+          <input type="number" class="valenceElectronsInput" index="2" oninput="updateValenceElectron(event)">
+          <input type="number" class="valenceElectronsInput" index="3" oninput="updateValenceElectron(event)">
+        </div>
+        <button class="removeButton" onclick="removeNode(event)">X</button>
+        <button class="addButton" onclick="addNode(event)">Add</button>
+      </div>
+    </template>
   </body>
 </html>
